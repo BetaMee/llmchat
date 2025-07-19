@@ -1,0 +1,57 @@
+# 模型配置
+model:
+  base_model: "Qwen/Qwen2.5-0.5B-Instruct"  # 基础模型
+  model_name: "logistics-extractor"          # 模型名称
+  max_length: 2048                           # 最大序列长度
+  use_4bit: true                             # 是否使用4bit量化
+  use_nested_quant: true                     # 是否使用嵌套量化
+  bnb_4bit_compute_dtype: "float16"         # 计算数据类型
+
+# 训练配置
+training:
+  num_epochs: 3                              # 训练轮数
+  batch_size: 4                              # 批次大小
+  gradient_accumulation_steps: 4             # 梯度累积步数
+  learning_rate: 2e-4                        # 学习率
+  warmup_steps: 100                          # 预热步数
+  weight_decay: 0.01                         # 权重衰减
+  max_grad_norm: 0.3                         # 梯度裁剪
+  save_steps: 500                            # 保存步数
+  eval_steps: 500                            # 评估步数
+  logging_steps: 50                          # 日志步数
+
+# 数据配置
+data:
+  train_file: "data/train.json"              # 训练数据文件
+  eval_file: "data/eval.json"                # 评估数据文件
+  test_file: "data/test.json"                # 测试数据文件
+  max_samples: null                          # 最大样本数（null表示全部）
+
+# LoRA配置
+lora:
+  r: 16                                      # LoRA秩
+  lora_alpha: 32                             # LoRA alpha参数
+  target_modules: ["q_proj", "v_proj"]      # 目标模块
+  lora_dropout: 0.1                          # LoRA dropout
+  bias: "none"                               # 偏置处理方式
+  task_type: "CAUSAL_LM"                     # 任务类型
+
+# 输出配置
+output:
+  output_dir: "outputs"                      # 输出目录
+  save_total_limit: 3                        # 保存检查点数量限制
+  load_best_model_at_end: true              # 训练结束时加载最佳模型
+  metric_for_best_model: "eval_loss"        # 最佳模型指标
+
+# 日志配置
+logging:
+  use_wandb: false                           # 是否使用wandb
+  wandb_project: "logistics-extractor"       # wandb项目名
+  use_tensorboard: true                      # 是否使用tensorboard
+  log_level: "INFO"                          # 日志级别
+
+# 设备配置
+device:
+  use_cpu: false                             # 是否使用CPU
+  use_mps: false                             # 是否使用MPS（Apple Silicon）
+  use_fp16: true                             # 是否使用FP16 
