@@ -11,7 +11,7 @@ from loguru import logger
 # 添加src目录到Python路径
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from src.data_processing.data_generator import LogisticsDataGenerator
+from data_processing.data_generator import LogisticsDataGenerator
 
 
 def main():

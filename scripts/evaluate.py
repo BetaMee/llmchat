@@ -13,7 +13,7 @@ from loguru import logger
 # 添加src目录到Python路径
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from src.utils.inference import LogisticsExtractor
+from utils.inference import LogisticsExtractor
 
 
 def load_test_data(filepath: str) -> List[Dict[str, Any]]:

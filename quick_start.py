@@ -34,9 +34,9 @@ def main():
         return
     
     # 安装依赖
-    logger.info("安装依赖包...")
-    if not run_command("pip install -r requirements.txt", "安装依赖"):
-        return
+    # logger.info("安装依赖包...")
+    # if not run_command("pip install -r requirements.txt", "安装依赖"):
+    #     return
     
     # 生成训练数据
     logger.info("生成训练数据...")
