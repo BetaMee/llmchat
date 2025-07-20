@@ -53,13 +53,13 @@ def setup_training_arguments(config: Dict[str, Any]) -> TrainingArguments:
         load_best_model_at_end=config['output']['load_best_model_at_end'],
         metric_for_best_model=config['output']['metric_for_best_model'],
         greater_is_better=False,  # 对于loss，越小越好
-        evaluation_strategy="steps",
+        eval_strategy="steps",
         save_strategy="steps",
         logging_strategy="steps",
         fp16=config['device']['use_fp16'],
         dataloader_pin_memory=False,
         remove_unused_columns=False,
-        report_to="wandb" if config['logging']['use_wandb'] else None,
+        report_to=["wandb"] if config['logging']['use_wandb'] else [],
     )
 
 

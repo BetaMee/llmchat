@@ -3,7 +3,7 @@ model:
   base_model: "Qwen/Qwen2.5-0.5B-Instruct"  # 基础模型
   model_name: "logistics-extractor"          # 模型名称
   max_length: 2048                           # 最大序列长度
-  use_4bit: true                             # 是否使用4bit量化
+  use_4bit: false                            # 是否使用4bit量化
   use_nested_quant: true                     # 是否使用嵌套量化
   bnb_4bit_compute_dtype: "float16"         # 计算数据类型
 

@@ -34,6 +34,11 @@ class LogisticsTrainer:
         """加载配置文件"""
         with open(config_path, 'r', encoding='utf-8') as f:
             config = yaml.safe_load(f)
+        
+        # 确保学习率是浮点数
+        if 'training' in config and 'learning_rate' in config['training']:
+            config['training']['learning_rate'] = float(config['training']['learning_rate'])
+        
         logger.info(f"配置文件加载完成: {config_path}")
         return config
     
