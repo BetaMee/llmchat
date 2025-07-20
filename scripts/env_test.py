@@ -142,14 +142,40 @@ def test_bitsandbytes() -> Dict[str, Any]:
     try:
         import bitsandbytes as bnb
         bnb_info = {
-            "bitsandbytes_version": bnb.__version__,
-            "cuda_available": bnb.cuda_setup.get_compute_capability() is not None
+            "bitsandbytes_version": bnb.__version__
         }
         
         print(f"bitsandbytes 版本: {bnb_info['bitsandbytes_version']}")
-        print(f"CUDA 支持: {bnb_info['cuda_available']}")
         
-        if bnb_info['cuda_available']:
+        # 尝试不同的方法来检查 CUDA 支持
+        cuda_available = False
+        try:
+            # 方法1：尝试导入 CUDA 相关模块
+            from bitsandbytes.cuda_setup.main import get_compute_capability
+            compute_cap = get_compute_capability()
+            cuda_available = compute_cap is not None
+            print(f"CUDA 支持: {cuda_available}")
+            if cuda_available:
+                print(f"计算能力: {compute_cap}")
+        except ImportError:
+            try:
+                # 方法2：尝试直接访问
+                compute_cap = bnb.cuda_setup.get_compute_capability()
+                cuda_available = compute_cap is not None
+                print(f"CUDA 支持: {cuda_available}")
+                if cuda_available:
+                    print(f"计算能力: {compute_cap}")
+            except AttributeError:
+                try:
+                    # 方法3：尝试其他属性
+                    cuda_available = hasattr(bnb, 'cuda_setup')
+                    print(f"CUDA 支持: {cuda_available}")
+                except:
+                    print("无法确定 CUDA 支持状态")
+        
+        bnb_info["cuda_available"] = cuda_available
+        
+        if cuda_available:
             print("✓ bitsandbytes CUDA 支持可用")
         else:
             print("⚠ bitsandbytes 没有 CUDA 支持")
