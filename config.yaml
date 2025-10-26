@@ -1,0 +1,61 @@
+# Unsloth + Qwen3-8b 训练配置
+
+# 模型配置
+model:
+  name: "Qwen/Qwen2.5-8B"  # Qwen3-8b 模型
+  max_seq_length: 2048
+  dtype: null  # auto detection
+  load_in_4bit: true  # 使用 4-bit 量化
+
+# LoRA 配置
+lora:
+  r: 16  # LoRA rank
+  lora_alpha: 16
+  lora_dropout: 0
+  bias: "none"
+  target_modules:
+    - q_proj
+    - k_proj
+    - v_proj
+    - o_proj
+    - gate_proj
+    - up_proj
+    - down_proj
+  use_gradient_checkpointing: "unsloth"
+  random_state: 42
+  use_rslora: false
+  loftq_config: null
+
+# 训练配置
+training:
+  output_dir: "./outputs"
+  num_train_epochs: 3
+  per_device_train_batch_size: 2
+  gradient_accumulation_steps: 4
+  warmup_steps: 5
+  learning_rate: 2.0e-4
+  fp16: false
+  bf16: true  # 使用 bf16 以提升训练速度
+  logging_steps: 10
+  optim: "adamw_8bit"
+  weight_decay: 0.01
+  lr_scheduler_type: "linear"
+  seed: 42
+  save_strategy: "steps"
+  save_steps: 100
+  save_total_limit: 3
+  report_to: "tensorboard"  # 或 "wandb"
+
+# 数据配置
+data:
+  train_file: "./data/train.json"
+  val_file: "./data/val.json"
+  test_file: "./data/test.json"
+  max_length: 2048
+
+# 推理配置
+inference:
+  max_new_tokens: 512
+  temperature: 0.7
+  top_p: 0.9
+  do_sample: true
