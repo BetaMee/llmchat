@@ -93,7 +93,7 @@ class FigmaJSONTrainer:
         
         # 显示示例
         print("\n训练样本示例:")
-        print(self.train_dataset[0]['text'][:500] + "...")
+        print(self.train_dataset[0]['text'][:20] + "...")
     
     def prepare_training_args(self):
         """准备训练参数"""
