@@ -1,29 +1,107 @@
-# Unsloth - Fast finetuning library
-# Note: For macOS, use basic unsloth without [colab-new] due to bitsandbytes compatibility
+# ============================================================
+# Figma JSON 微调训练框架依赖
+# 适配 PyTorch 2.7.0 + CUDA 12.8 + Python 3.12
+# ============================================================
+
+# -------------------- 核心训练库 --------------------
+
+# Unsloth - 高速微调加速库 (2-5x 提速)
 unsloth @ git+https://github.com/unslothai/unsloth.git
 
-# Core dependencies
+# PyTorch 深度学习框架
+# 注意: 请根据您的 CUDA 版本安装对应的 PyTorch
+# CUDA 11.8: pip install torch --index-url https://download.pytorch.org/whl/cu118
+# CUDA 12.1: pip install torch --index-url https://download.pytorch.org/whl/cu121
+# CUDA 12.8: 使用最新版 torch (已在您的环境中)
 torch>=2.1.0
+
+# Transformers - Hugging Face 模型库 (支持 Qwen3-VL)
 transformers>=4.40.0
+
+# Datasets - 数据集加载和处理
 datasets>=2.18.0
+
+# Accelerate - 分布式训练加速
 accelerate>=0.27.0
+
+# PEFT - 高效参数微调 (LoRA)
 peft>=0.10.0
+
+# TRL - Transformer 强化学习库
 trl>=0.8.0
-bitsandbytes>=0.42.0,<0.43.0  # macOS 最高支持 0.42.0
 
-# Training utilities
-wandb>=0.16.0
-tensorboard>=2.15.0
-scikit-learn>=1.4.0
+# Bitsandbytes - 4-bit/8-bit 量化
+# CUDA 12.8 需要 0.43.0+
+bitsandbytes>=0.43.0
 
-# Data processing
+# -------------------- 数据处理 --------------------
+
+# YAML 配置文件解析
+pyyaml>=6.0.1
+
+# 数据分析和处理
 pandas>=2.2.0
 numpy>=1.26.0
+
+# 进度条
 tqdm>=4.66.0
 
-# Optional
+# -------------------- 训练监控 --------------------
+
+# Weights & Biases - 实验跟踪 (可选)
+wandb>=0.16.0
+
+# TensorBoard - 训练可视化
+tensorboard>=2.15.0
+
+# 机器学习工具
+scikit-learn>=1.4.0
+
+# -------------------- 开发工具 (可选) --------------------
+
+# 交互式 Python 环境
 ipython>=8.20.0
+
+# Jupyter Notebook
 jupyter>=1.0.0
 
-# Evaluation tools
-openai>=1.0.0  # 用于评估脚本
+# -------------------- 推荐的额外依赖 --------------------
+
+# Flash Attention 2 - 加速注意力计算 (推荐安装)
+# pip install flash-attn --no-build-isolation
+
+# Triton - GPU 编程语言 (Unsloth 可能需要)
+# pip install triton>=2.0.0
+
+# ============================================================
+# 安装说明
+# ============================================================
+#
+# 完整安装流程：
+#
+# 1. 安装 PyTorch (根据您的 CUDA 版本)
+#    pip install torch --index-url https://download.pytorch.org/whl/cu121
+#
+# 2. 安装项目依赖
+#    pip install -r requirements.txt
+#
+# 3. 安装 Flash Attention (可选，但强烈推荐)
+#    pip install flash-attn --no-build-isolation
+#
+# 4. 验证安装
+#    python scripts/verify_env.py
+#
+# ============================================================
+# 兼容性说明
+# ============================================================
+#
+# PyTorch 版本: 2.1.0 - 2.7.0
+# Python 版本: 3.10 - 3.12
+# CUDA 版本: 11.8, 12.1, 12.8
+# GPU 显存: 建议 32GB+ (训练 32B 模型)
+#
+# macOS 用户注意:
+# - bitsandbytes 在 macOS 上功能受限
+# - 建议使用 Linux + NVIDIA GPU 进行训练
+#
+# ============================================================
