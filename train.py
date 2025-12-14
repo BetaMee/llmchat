@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Unsloth + Qwen3-8b 微调训练脚本
+Unsloth + Qwen3-VL-32B 微调训练脚本
 用于训练 Figma JSON 生成模型
 """
 
@@ -62,8 +62,10 @@ class FigmaJSONTrainer:
         )
         
         print("模型加载完成!")
-        print(f"模型: {model_config['name']}")
-        print(f"LoRA rank: {lora_config['r']}")
+        print(f"  模型: {model_config['name']}")
+        print(f"  LoRA rank: {lora_config['r']}")
+        print(f"  最大序列长度: {model_config['max_seq_length']}")
+        print(f"  4-bit 量化: {model_config['load_in_4bit']}")
     
     def load_datasets(self):
         """加载数据集"""
@@ -93,7 +95,9 @@ class FigmaJSONTrainer:
         
         # 显示示例
         print("\n训练样本示例:")
-        print(self.train_dataset[0]['text'][:20] + "...")
+        sample_text = self.train_dataset[0]['text']
+        preview_len = min(200, len(sample_text))
+        print(sample_text[:preview_len] + "...")
     
     def prepare_training_args(self):
         """准备训练参数"""
@@ -180,23 +184,48 @@ class FigmaJSONTrainer:
     def get_training_stats(self, trainer):
         """获取训练统计信息"""
         if trainer.state.log_history:
-            print("\n=== 训练统计 ===")
-            final_loss = trainer.state.log_history[-1].get('loss', 'N/A')
-            print(f"最终训练损失: {final_loss}")
+            print("\n" + "="*60)
+            print("   训练统计")
+            print("="*60)
             
+            # 查找最后的训练损失
+            train_loss = None
+            for log in reversed(trainer.state.log_history):
+                if 'loss' in log:
+                    train_loss = log['loss']
+                    break
+            
+            if train_loss is not None:
+                print(f"最终训练损失: {train_loss:.4f}")
+            
+            # 查找最后的验证损失
             if self.eval_dataset:
-                eval_loss = trainer.state.log_history[-1].get('eval_loss', 'N/A')
-                print(f"最终验证损失: {eval_loss}")
+                eval_loss = None
+                for log in reversed(trainer.state.log_history):
+                    if 'eval_loss' in log:
+                        eval_loss = log['eval_loss']
+                        break
+                
+                if eval_loss is not None:
+                    print(f"最终验证损失: {eval_loss:.4f}")
+            
+            print("="*60)
 
 
 def main():
     """主函数"""
+    print("\n" + "="*60)
+    print("   Figma JSON 微调训练")
+    print("="*60)
+    
     # 检查 CUDA 是否可用
-    print(f"CUDA 可用: {torch.cuda.is_available()}")
+    print(f"\nCUDA 可用: {torch.cuda.is_available()}")
     if torch.cuda.is_available():
         print(f"CUDA 设备数量: {torch.cuda.device_count()}")
         print(f"当前设备: {torch.cuda.current_device()}")
         print(f"设备名称: {torch.cuda.get_device_name(0)}")
+    
+    print("\n" + "="*60 + "\n")
     
     # 创建训练器
     trainer_obj = FigmaJSONTrainer(config_path="config.yaml")
@@ -213,7 +242,13 @@ def main():
     # 显示统计信息
     trainer_obj.get_training_stats(trainer)
     
-    print("\n训练流程全部完成!")
+    print("\n" + "="*60)
+    print("   ✅ 训练流程全部完成!")
+    print("="*60)
+    print(f"\n模型已保存到 ./outputs/ 目录")
+    print("使用以下命令进行推理:")
+    print("  python inference.py --model_path ./outputs/final_model --mode interactive")
+    print()
 
 
 if __name__ == "__main__":

@@ -1,16 +1,16 @@
-# Unsloth + Qwen3-8b 训练配置
+# Unsloth + Qwen3-VL-32B 训练配置
 
 # 模型配置
 model:
-  name: "Qwen/Qwen2.5-8B"  # Qwen3-8b 模型
-  max_seq_length: 2048
+  name: "Qwen/Qwen3-VL-32B-Instruct"  # Qwen3-VL-32B 多模态模型
+  max_seq_length: 4096  # 增加序列长度以支持复杂的 Figma JSON
   dtype: null  # auto detection
   load_in_4bit: true  # 使用 4-bit 量化
 
 # LoRA 配置
 lora:
-  r: 16  # LoRA rank
-  lora_alpha: 16
+  r: 32  # 增加 LoRA rank 以适应更大模型
+  lora_alpha: 32
   lora_dropout: 0
   bias: "none"
   target_modules:
@@ -30,10 +30,10 @@ lora:
 training:
   output_dir: "./outputs"
   num_train_epochs: 3
-  per_device_train_batch_size: 2
-  gradient_accumulation_steps: 4
-  warmup_steps: 5
-  learning_rate: 2.0e-4
+  per_device_train_batch_size: 1  # 减小batch size适应32B模型
+  gradient_accumulation_steps: 8  # 增加梯度累积
+  warmup_steps: 10
+  learning_rate: 1.0e-4  # 降低学习率
   fp16: false
   bf16: true  # 使用 bf16 以提升训练速度
   logging_steps: 10
@@ -50,12 +50,11 @@ training:
 data:
   train_file: "./data/train.json"
   val_file: "./data/val.json"
-  test_file: "./data/test.json"
-  max_length: 2048
+  max_length: 4096
 
 # 推理配置
 inference:
-  max_new_tokens: 512
-  temperature: 0.7
+  max_new_tokens: 2048  # 增加以支持长 JSON 输出
+  temperature: 0.1  # 降低温度以获得更确定的输出
   top_p: 0.9
   do_sample: true

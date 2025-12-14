@@ -1,6 +1,6 @@
 # Figma JSON 微调训练框架
 
-基于 Unsloth + Qwen3-8b 的高效微调训练框架，用于训练 Figma JSON 生成模型。
+基于 Unsloth + Qwen3-VL-32B-Instruct 的高效微调训练框架，用于训练 Figma JSON 生成模型。
 
 ## 项目简介
 
@@ -9,19 +9,20 @@
 ## 特性
 
 - ✅ 基于 Unsloth 的高速训练（比标准训练快 2-5 倍）
-- ✅ 支持 Qwen3-8b 系列模型
+- ✅ 支持 Qwen3-VL-32B-Instruct 多模态模型
 - ✅ 4-bit 量化降低显存需求
-- ✅ LoRA 高效参数微调
+- ✅ LoRA 高效参数微调（rank=32）
 - ✅ 完整的数据处理流程
 - ✅ 交互式推理模式
 - ✅ 多种模型导出格式（LoRA、合并模型、GGUF）
+- ✅ 支持 JSONL 和 JSON 数据格式
 
 ## 环境要求
 
 - Python 3.10+
 - CUDA 11.8+ (推荐使用 GPU 训练)
-- 16GB+ GPU 显存（使用 4-bit 量化）
-- 32GB+ 系统内存
+- 32GB+ GPU 显存（使用 4-bit 量化训练 32B 模型）
+- 64GB+ 系统内存
 
 ## 快速开始
 
@@ -30,11 +31,6 @@
 ```bash
 # 安装 Python 依赖
 pip install -r requirements.txt
-
-# 如果遇到问题，可以分步安装
-pip install torch --index-url https://download.pytorch.org/whl/cu118
-pip install "unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git"
-pip install transformers datasets accelerate peft trl bitsandbytes
 ```
 
 ### 2. 准备数据
@@ -43,39 +39,32 @@ pip install transformers datasets accelerate peft trl bitsandbytes
 
 ```bash
 # 生成示例数据并处理
-python data_processor.py
+python data_processor.py --mode sample
 ```
 
 #### 使用自定义数据
 
-在 `data/` 目录下创建您的数据文件：
+准备你的训练数据文件（支持 JSONL 或 JSON 格式）：
 
-**数据格式** (`raw_train.json`):
-```json
-[
-  {
-    "input": "创建一个蓝色的矩形按钮，宽度200px，高度50px",
-    "output": {
-      "type": "RECTANGLE",
-      "name": "Button",
-      "width": 200,
-      "height": 50,
-      "fills": [
-        {
-          "type": "SOLID",
-          "color": {"r": 0.0, "g": 0.5, "b": 1.0, "a": 1.0}
-        }
-      ],
-      "cornerRadius": 8
-    }
-  }
-]
+**数据格式** (`raw_train.jsonl`):
+```jsonl
+{"instruction":"创建一个蓝色的矩形按钮，宽度200px，高度50px","input":"","output":"{\"type\":\"RECTANGLE\",\"name\":\"Button\",\"width\":200,\"height\":50,...}"}
+{"instruction":"简约扁平风格UI预览界面...","input":"","output":"{\"type\":\"FRAME\",\"name\":\"Preview\",...}"}
 ```
+
+**字段说明**:
+- `instruction`: 设计意图描述（必需）
+- `input`: 输入上下文（当前版本可留空）
+- `output`: 对应的 Figma 节点 JSON（可以是 JSON 字符串或对象）
 
 然后运行数据处理脚本：
 
 ```bash
-python data_processor.py
+# 处理训练数据
+python data_processor.py --mode process --input ./data/raw_train.jsonl --output ./data/train.json
+
+# 处理验证数据
+python data_processor.py --mode process --input ./data/raw_val.jsonl --output ./data/val.json
 ```
 
 ### 3. 配置训练参数
@@ -85,20 +74,21 @@ python data_processor.py
 ```yaml
 # 模型配置
 model:
-  name: "Qwen/Qwen2.5-8B"
-  max_seq_length: 2048
+  name: "Qwen/Qwen3-VL-32B-Instruct"
+  max_seq_length: 4096
   load_in_4bit: true
 
 # LoRA 配置
 lora:
-  r: 16
-  lora_alpha: 16
+  r: 32  # LoRA rank
+  lora_alpha: 32
 
 # 训练配置
 training:
   num_train_epochs: 3
-  per_device_train_batch_size: 2
-  learning_rate: 2.0e-4
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 8
+  learning_rate: 1.0e-4
 ```
 
 ### 4. 开始训练
@@ -117,25 +107,33 @@ python train.py
 #### 交互式模式
 
 ```bash
-python inference.py --mode interactive
+python inference.py --model_path ./outputs/final_model --mode interactive
 ```
 
 #### 测试模式
 
 ```bash
-python inference.py --mode test
+python inference.py --model_path ./outputs/final_model --mode test
 ```
 
 #### 单次生成
 
 ```bash
-python inference.py --mode single --input "创建一个红色圆形，半径50px" --output result.json
+python inference.py \
+  --model_path ./outputs/final_model \
+  --mode single \
+  --input "创建一个红色圆形，半径50px" \
+  --output result.json
 ```
 
-#### 指定模型路径
+#### 自定义生成参数
 
 ```bash
-python inference.py --model_path ./outputs/merged_16bit --mode interactive
+python inference.py \
+  --model_path ./outputs/final_model \
+  --mode interactive \
+  --temperature 0.1 \
+  --max_new_tokens 2048
 ```
 
 ## 项目结构
@@ -149,8 +147,8 @@ python inference.py --model_path ./outputs/merged_16bit --mode interactive
 ├── train.py              # 训练脚本
 ├── inference.py          # 推理脚本
 ├── data/                 # 数据目录
-│   ├── raw_train.json    # 原始训练数据
-│   ├── raw_val.json      # 原始验证数据
+│   ├── raw_train.jsonl   # 原始训练数据
+│   ├── raw_val.jsonl     # 原始验证数据
 │   ├── train.json        # 处理后的训练数据
 │   └── val.json          # 处理后的验证数据
 └── outputs/              # 输出目录
@@ -168,6 +166,12 @@ python inference.py --model_path ./outputs/merged_16bit --mode interactive
 1. **创建示例数据** - 生成用于测试的示例 Figma JSON 数据
 2. **数据处理** - 将原始数据转换为训练格式
 3. **Prompt 构建** - 使用 Qwen 的对话模板格式化数据
+4. **灵活格式** - 支持 JSONL 和 JSON 两种输入格式
+
+**命令行参数**：
+```bash
+python data_processor.py --mode [sample|process] --input <输入文件> --output <输出文件>
+```
 
 ### 训练配置
 
@@ -175,12 +179,13 @@ python inference.py --model_path ./outputs/merged_16bit --mode interactive
 
 | 参数 | 说明 | 推荐值 |
 |------|------|--------|
-| `max_seq_length` | 最大序列长度 | 2048 |
+| `max_seq_length` | 最大序列长度 | 4096 |
 | `load_in_4bit` | 使用 4-bit 量化 | true |
-| `lora.r` | LoRA rank | 16-64 |
-| `learning_rate` | 学习率 | 2e-4 |
+| `lora.r` | LoRA rank | 32 |
+| `learning_rate` | 学习率 | 1e-4 |
 | `num_train_epochs` | 训练轮数 | 3-5 |
-| `per_device_train_batch_size` | 批次大小 | 2-4 |
+| `per_device_train_batch_size` | 批次大小 | 1 |
+| `gradient_accumulation_steps` | 梯度累积步数 | 8 |
 
 ### 模型导出
 
@@ -188,21 +193,19 @@ python inference.py --model_path ./outputs/merged_16bit --mode interactive
 
 1. **LoRA 适配器** (`final_model/`) - 仅包含训练的参数，体积小
 2. **合并模型** (`merged_16bit/`) - 完整的 16-bit 模型
-3. **GGUF 格式** (`gguf_model/`) - 用于 llama.cpp 等工具
+3. **GGUF 格式** (`gguf_model/`) - 用于 llama.cpp 等工具（可选）
 
 ### 推理选项
 
 推理脚本支持多种参数：
 
-```python
-# 在代码中自定义生成参数
-result = inference.generate(
-    user_input="创建一个按钮",
-    max_new_tokens=512,
-    temperature=0.7,
-    top_p=0.9,
-    do_sample=True
-)
+```bash
+--model_path      # 模型路径（必需）
+--mode            # 运行模式：interactive, test, single
+--input           # 单次模式的输入文本
+--output          # 输出文件路径
+--temperature     # 生成温度（0.0-1.0）
+--max_new_tokens  # 最大生成token数
 ```
 
 ## 性能优化
@@ -212,38 +215,41 @@ result = inference.generate(
 1. **使用 4-bit 量化** - 减少显存占用约 75%
 2. **调整批次大小** - 根据显存大小调整 `per_device_train_batch_size`
 3. **梯度累积** - 使用 `gradient_accumulation_steps` 模拟大批次
+4. **梯度检查点** - 使用 Unsloth 的梯度检查点功能
 
 ### 训练速度
 
-1. **Unsloth 加速** - 自动优化训练速度
-2. **混合精度训练** - 使用 bf16 或 fp16
-3. **梯度检查点** - 降低显存但会稍微减慢速度
+1. **Unsloth 加速** - 自动优化训练速度（2-5倍提升）
+2. **混合精度训练** - 使用 bf16 混合精度
+3. **合理的序列长度** - 根据数据复杂度调整 `max_seq_length`
 
 ## 常见问题
 
 ### Q: 训练时显存不足怎么办？
 
 A: 尝试以下方法：
-- 减小 `per_device_train_batch_size`
-- 增加 `gradient_accumulation_steps`
-- 减小 `max_seq_length`
+- 减小 `per_device_train_batch_size` 为 1
+- 增加 `gradient_accumulation_steps` 到 16
+- 减小 `max_seq_length` 到 2048
 - 确保使用 4-bit 量化
 
 ### Q: 如何提高生成质量？
 
 A: 
 - 增加训练数据的数量和质量
-- 调整 LoRA rank（如 r=32 或 r=64）
-- 增加训练轮数
-- 调整生成参数（temperature、top_p）
+- 调整 LoRA rank（如 r=64）
+- 增加训练轮数（num_train_epochs=5）
+- 调整生成参数（temperature 降低到 0.1）
+- 确保训练数据符合 Figma API 规范
 
 ### Q: 支持哪些模型？
 
-A: 支持 Qwen 系列模型，包括：
-- Qwen/Qwen2.5-8B
-- Qwen/Qwen2.5-14B
-- Qwen/Qwen2.5-7B
-- 其他兼容的模型
+A: 当前配置为 Qwen3-VL-32B-Instruct，也支持其他 Qwen 系列模型：
+- Qwen/Qwen2.5-7B-Instruct
+- Qwen/Qwen2.5-14B-Instruct
+- Qwen/Qwen2.5-32B-Instruct
+
+修改 `config.yaml` 中的 `model.name` 即可。
 
 ### Q: 如何在 CPU 上运行？
 
@@ -256,13 +262,45 @@ model:
 
 但 CPU 训练会非常慢，不推荐用于生产环境。
 
+## 数据格式示例
+
+### 完整的训练样本
+
+```json
+{
+  "instruction": "简约扁平风格UI预览界面，三列等宽圆角矩形卡片，浅灰填充，深灰背景，左上角\"Preview\"文字标签",
+  "input": "",
+  "output": {
+    "type": "FRAME",
+    "name": "Preview",
+    "width": 327,
+    "height": 93,
+    "x": 24,
+    "y": 589,
+    "blendMode": "PASS_THROUGH",
+    "children": [
+      {
+        "type": "TEXT",
+        "name": "Preview",
+        "characters": "Preview",
+        "fontSize": 14,
+        "fontName": {
+          "family": "Inter",
+          "style": "Medium"
+        }
+      }
+    ]
+  }
+}
+```
+
 ## 监控训练
 
 ### TensorBoard
 
 ```bash
 # 启动 TensorBoard
-tensorboard --logdir outputs/runs
+tensorboard --logdir outputs/
 
 # 在浏览器访问
 # http://localhost:6006
@@ -293,12 +331,20 @@ MIT License
 
 - [Unsloth](https://github.com/unslothai/unsloth) - 高速 LLM 微调库
 - [Qwen](https://github.com/QwenLM/Qwen) - 通义千问大模型
+- [Figma API](https://www.figma.com/developers/api) - Figma 开发者文档
 - [Hugging Face](https://huggingface.co/) - 模型和数据集托管
 
 ## 更新日志
 
+### v2.0.0 (2024-12-14)
+- 升级到 Qwen3-VL-32B-Instruct 模型
+- 优化数据处理流程，支持 JSONL 格式
+- 移除评估脚本，专注于训练和推理
+- 改进配置文件和命令行界面
+- 增强错误处理和日志输出
+
 ### v1.0.0 (2024-10-26)
 - 初始版本发布
-- 支持 Unsloth + Qwen3-8b 微调
+- 支持 Unsloth + Qwen2.5-8B 微调
 - 完整的训练和推理流程
 - 示例数据生成
