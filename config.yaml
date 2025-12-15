@@ -3,15 +3,14 @@
 # 模型配置
 model:
   # 使用 Unsloth 优化的 Qwen 模型
+  # 注意：CUDA 12.8 暂不支持 4-bit 量化，使用 bf16 训练
   # 可选模型:
-  # - unsloth/Qwen2.5-7B-Instruct-bnb-4bit (推荐，显存友好)
-  # - Qwen/Qwen2.5-7B-Instruct (官方模型)
-  # - unsloth/Qwen2.5-14B-Instruct-bnb-4bit
-  # 如果网络受限，可以配置镜像或使用本地模型路径
-  name: "unsloth/Qwen2.5-7B-Instruct-bnb-4bit"
+  # - Qwen/Qwen2.5-7B-Instruct (官方模型，推荐)
+  # - unsloth/Qwen2.5-7B-Instruct (Unsloth优化版)
+  name: "Qwen/Qwen2.5-7B-Instruct"
   max_seq_length: 4096  # 增加序列长度以支持复杂的 Figma JSON
-  dtype: null  # auto detection
-  load_in_4bit: true  # 使用 4-bit 量化
+  dtype: "bfloat16"  # 使用 bf16 替代 4-bit 量化
+  load_in_4bit: false  # CUDA 12.8 暂不支持，禁用量化
 
 # LoRA 配置
 lora:

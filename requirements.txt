@@ -7,6 +7,7 @@
 
 # Unsloth - 高速微调加速库 (2-5x 提速)
 unsloth @ git+https://github.com/unslothai/unsloth.git
+unsloth_zoo  # Unsloth 必需的依赖包
 
 # PyTorch 深度学习框架
 # 注意: 请根据您的 CUDA 版本安装对应的 PyTorch
