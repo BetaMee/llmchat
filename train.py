@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Unsloth + Qwen3-VL-32B 微调训练脚本
+Unsloth + Qwen 微调训练脚本
 用于训练 Figma JSON 生成模型
 """
 
@@ -9,10 +9,14 @@ import os
 import json
 import yaml
 import torch
+
+# ⚠️ 重要：Unsloth 必须在 transformers, trl, peft 之前导入以启用所有优化
+from unsloth import FastLanguageModel
+
+# 然后导入其他训练相关库
 from datasets import load_dataset
 from transformers import TrainingArguments
 from trl import SFTTrainer
-from unsloth import FastLanguageModel
 
 
 class FigmaJSONTrainer:

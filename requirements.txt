@@ -36,6 +36,9 @@ bitsandbytes>=0.43.0
 
 # -------------------- 数据处理 --------------------
 
+# ModelScope - 国内模型下载和使用（替代 HuggingFace）
+modelscope>=1.11.0
+
 # YAML 配置文件解析
 pyyaml>=6.0.1
 
