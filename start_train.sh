@@ -9,12 +9,13 @@ echo "=========================================="
 export MODELSCOPE_CACHE=./models
 echo "✅ ModelScope 缓存目录: $MODELSCOPE_CACHE"
 
-# 如果需要使用 HuggingFace 镜像（ModelScope 失败时的备选）
-# export HF_ENDPOINT=https://hf-mirror.com
+# 🔥 重要：禁用 HuggingFace 在线检查（使用本地模型）
+export HF_HUB_OFFLINE=1
+export TRANSFORMERS_OFFLINE=1
+echo "✅ 离线模式已启用"
 
-# 可选：完全离线模式（需要提前下载好模型）
-# export HF_DATASETS_OFFLINE=1
-# export TRANSFORMERS_OFFLINE=1
+# 或者使用 HuggingFace 镜像（如果需要在线下载）
+# export HF_ENDPOINT=https://hf-mirror.com
 
 echo ""
 echo "环境检查:"
