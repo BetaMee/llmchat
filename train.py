@@ -125,7 +125,8 @@ class FigmaJSONTrainer:
             save_steps=train_config['save_steps'],
             save_total_limit=train_config['save_total_limit'],
             report_to=train_config['report_to'],
-            evaluation_strategy="steps" if self.eval_dataset else "no",
+            # 新版本使用 eval_strategy 而非 evaluation_strategy
+            eval_strategy="steps" if self.eval_dataset else "no",
             eval_steps=train_config['save_steps'] if self.eval_dataset else None,
             load_best_model_at_end=True if self.eval_dataset else False,
         )
