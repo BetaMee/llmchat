@@ -76,3 +76,5 @@ runs/
 
 # Hugging Face
 .huggingface/ 
+unsloth_compiled_cache/
+models/*

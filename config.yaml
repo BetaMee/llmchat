@@ -1,65 +1,49 @@
-# Unsloth + Qwen3-VL-32B 训练配置
-
-# 模型配置
-model:
-  # 使用 Unsloth 优化的 Qwen 模型
-  # 注意：CUDA 12.8 暂不支持 4-bit 量化，使用 bf16 训练
-  # 可选模型:
-  # - Qwen/Qwen2.5-7B-Instruct (官方模型，推荐)
-  # - unsloth/Qwen2.5-7B-Instruct (Unsloth优化版)
-  name: "Qwen/Qwen2.5-7B-Instruct"
-  max_seq_length: 4096  # 增加序列长度以支持复杂的 Figma JSON
-  dtype: "bfloat16"  # 使用 bf16 替代 4-bit 量化
-  load_in_4bit: false  # CUDA 12.8 暂不支持，禁用量化
-
-# LoRA 配置
+data:
+  max_length: 4096
+  train_file: ./data/train.json
+  val_file: ./data/val.json
+inference:
+  do_sample: true
+  max_new_tokens: 2048
+  temperature: 0.1
+  top_p: 0.9
 lora:
-  r: 32  # 增加 LoRA rank 以适应更大模型
+  bias: none
+  loftq_config: null
   lora_alpha: 32
   lora_dropout: 0
-  bias: "none"
-  target_modules:
-    - q_proj
-    - k_proj
-    - v_proj
-    - o_proj
-    - gate_proj
-    - up_proj
-    - down_proj
-  use_gradient_checkpointing: "unsloth"
+  r: 32
   random_state: 42
+  target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+  use_gradient_checkpointing: unsloth
   use_rslora: false
-  loftq_config: null
-
-# 训练配置
+model:
+  dtype: bfloat16
+  load_in_4bit: false
+  max_seq_length: 4096
+  name: ./models/Qwen/Qwen2___5-14B-Instruct
 training:
-  output_dir: "./outputs"
-  num_train_epochs: 3
-  per_device_train_batch_size: 1  # 减小batch size适应32B模型
-  gradient_accumulation_steps: 8  # 增加梯度累积
-  warmup_steps: 10
-  learning_rate: 1.0e-4  # 降低学习率
+  bf16: true
   fp16: false
-  bf16: true  # 使用 bf16 以提升训练速度
+  gradient_accumulation_steps: 8
+  learning_rate: 0.0001
   logging_steps: 10
-  optim: "adamw_8bit"
-  weight_decay: 0.01
-  lr_scheduler_type: "linear"
-  seed: 42
-  save_strategy: "steps"
+  lr_scheduler_type: linear
+  num_train_epochs: 3
+  optim: adamw_8bit
+  output_dir: ./outputs
+  per_device_train_batch_size: 1
+  report_to: tensorboard
   save_steps: 100
+  save_strategy: steps
   save_total_limit: 3
-  report_to: "tensorboard"  # 或 "wandb"
-
-# 数据配置
-data:
-  train_file: "./data/train.json"
-  val_file: "./data/val.json"
-  max_length: 4096
-
-# 推理配置
-inference:
-  max_new_tokens: 2048  # 增加以支持长 JSON 输出
-  temperature: 0.1  # 降低温度以获得更确定的输出
-  top_p: 0.9
-  do_sample: true
+  seed: 42
+  warmup_steps: 10
+  weight_decay: 0.01
