@@ -16,7 +16,7 @@ echo ""
 
 # 运行推理
 # 根据需要修改参数
-python inference.py --model_path ./outputs/final_model "$@"
+python src/inference.py --model_path ./outputs/final_model "$@"
 
 echo ""
 echo "=========================================="
