@@ -1,20 +1,19 @@
 # ============================================================
 # Figma JSON 微调训练框架依赖
-# 适配 PyTorch 2.7.0 + CUDA 12.8 + Python 3.12
+# 适配 PyTorch 2.10.0 + CUDA 12.8 + Python 3.13
 # ============================================================
 
 # -------------------- 核心训练库 --------------------
-
-# Unsloth - 高速微调加速库 (2-5x 提速)
-unsloth @ git+https://github.com/unslothai/unsloth.git
-unsloth_zoo  # Unsloth 必需的依赖包
-
 # PyTorch 深度学习框架
 # 注意: 请根据您的 CUDA 版本安装对应的 PyTorch
-# CUDA 11.8: pip install torch --index-url https://download.pytorch.org/whl/cu118
-# CUDA 12.1: pip install torch --index-url https://download.pytorch.org/whl/cu121
-# CUDA 12.8: 使用最新版 torch (已在您的环境中)
-torch>=2.1.0
+# 版本：torch=2.10.0+cu128 文档是 https://pytorch.org/
+# CUDA 12.8: pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+torch==2.10.0
+torchvision==0.25.0
+
+# 注意：需要先安装指定 CUDA 版本的 PyTorch，再安装 Unsloth
+# Unsloth - 高速微调加速库 (2-5x 提速)
+unsloth==0.1.0
 
 # Transformers - Hugging Face 模型库 (支持 Qwen3-VL)
 transformers>=4.40.0
@@ -77,35 +76,3 @@ jupyter>=1.0.0
 # Triton - GPU 编程语言 (Unsloth 可能需要)
 # pip install triton>=2.0.0
 
-# ============================================================
-# 安装说明
-# ============================================================
-#
-# 完整安装流程：
-#
-# 1. 安装 PyTorch (根据您的 CUDA 版本)
-#    pip install torch --index-url https://download.pytorch.org/whl/cu121
-#
-# 2. 安装项目依赖
-#    pip install -r requirements.txt
-#
-# 3. 安装 Flash Attention (可选，但强烈推荐)
-#    pip install flash-attn --no-build-isolation
-#
-# 4. 验证安装
-#    python scripts/verify_env.py
-#
-# ============================================================
-# 兼容性说明
-# ============================================================
-#
-# PyTorch 版本: 2.1.0 - 2.7.0
-# Python 版本: 3.10 - 3.12
-# CUDA 版本: 11.8, 12.1, 12.8
-# GPU 显存: 建议 32GB+ (训练 32B 模型)
-#
-# macOS 用户注意:
-# - bitsandbytes 在 macOS 上功能受限
-# - 建议使用 Linux + NVIDIA GPU 进行训练
-#
-# ============================================================

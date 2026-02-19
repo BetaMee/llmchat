@@ -209,6 +209,24 @@ def check_monitoring():
     except ImportError:
         print(f"⚠️  scikit-learn: 未安装")
 
+def check_dev_tools():
+    """检查开发工具"""
+    print_section("开发工具 (可选)")
+    
+    # IPython
+    try:
+        import IPython
+        print(f"✅ IPython: {IPython.__version__}")
+    except ImportError:
+        print(f"⚠️  IPython: 未安装 (可选)")
+    
+    # Jupyter
+    try:
+        import jupyter
+        print(f"✅ Jupyter: 已安装")
+    except ImportError:
+        print(f"⚠️  Jupyter: 未安装 (可选)")
+
 def check_flash_attention():
     """检查 Flash Attention"""
     print_section("性能优化 (可选)")
@@ -275,6 +293,7 @@ def main():
     
     # 可选检查
     check_monitoring()
+    check_dev_tools()
     check_flash_attention()
     
     # 模型加载测试
