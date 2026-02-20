@@ -1,10 +1,10 @@
 data:
-  max_length: 4096
+  max_length: 2048
   train_file: ./data/train.json
   val_file: ./data/val.json
 inference:
   do_sample: true
-  max_new_tokens: 2048
+  max_new_tokens: 1024
   temperature: 0.1
   top_p: 0.9
 lora:
@@ -27,8 +27,8 @@ lora:
 model:
   dtype: bfloat16
   load_in_4bit: true
-  max_seq_length: 4096
-  name: unsloth/Qwen2.5-7B-Instruct
+  max_seq_length: 2048
+  name: unsloth/Qwen2.5-3B-Instruct
 training:
   bf16: true
   fp16: false

@@ -10,6 +10,9 @@ import json
 import yaml
 import torch
 
+# 禁用 Unsloth 的 fused cross entropy 以节省显存（可选）
+# os.environ["UNSLOTH_DISABLE_FUSED_CROSS_ENTROPY"] = "1"
+
 # ⚠️ 重要：Unsloth 必须在 transformers, trl, peft 之前导入以启用所有优化
 from unsloth import FastLanguageModel
 
@@ -163,17 +166,17 @@ class FigmaJSONTrainer:
         print(f"\n保存最终模型到: {final_model_path}")
         trainer.save_model(final_model_path)
         
-        # 保存为 GGUF 格式（可选）
-        print("\n保存为 GGUF 格式...")
-        try:
-            self.model.save_pretrained_gguf(
-                f"{output_dir}/gguf_model",
-                self.tokenizer,
-                quantization_method="q4_k_m"
-            )
-            print("GGUF 模型保存成功!")
-        except Exception as e:
-            print(f"GGUF 保存失败（这是可选的）: {e}")
+        # 保存为 GGUF 格式（可选，Windows 上可能无法使用）
+        # print("\n保存为 GGUF 格式...")
+        # try:
+        #     self.model.save_pretrained_gguf(
+        #         f"{output_dir}/gguf_model",
+        #         self.tokenizer,
+        #         quantization_method="q4_k_m"
+        #     )
+        #     print("GGUF 模型保存成功!")
+        # except Exception as e:
+        #     print(f"GGUF 保存失败（这是可选的）: {e}")
         
         # 保存为合并后的 16bit 模型
         print("\n保存合并后的 16bit 模型...")
