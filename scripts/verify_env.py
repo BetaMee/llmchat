@@ -281,12 +281,13 @@ def main():
     print_header("Figma JSON 训练框架 - 环境验证")
     
     # 执行所有检查
+    # 注意: Unsloth 必须在 Transformers 之前导入以启用优化
     results = {
         'Python': check_python(),
         'PyTorch': check_pytorch(),
-        'Transformers': check_transformers(),
+        'Unsloth': check_unsloth(),  # 先检查 Unsloth
+        'Transformers': check_transformers(),  # 后检查 Transformers
         'Bitsandbytes': check_bitsandbytes(),
-        'Unsloth': check_unsloth(),
         'Training Libs': check_training_libs(),
         'Data Processing': check_data_processing(),
     }
