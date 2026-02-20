@@ -26,9 +26,9 @@ lora:
   use_rslora: false
 model:
   dtype: bfloat16
-  load_in_4bit: false
+  load_in_4bit: true
   max_seq_length: 4096
-  name: ./models/Qwen/Qwen2___5-14B-Instruct
+  name: unsloth/Qwen2.5-7B-Instruct
 training:
   bf16: true
   fp16: false

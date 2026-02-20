@@ -239,6 +239,72 @@ def check_flash_attention():
         print(f"⚠️  Flash Attention: 未安装 (强烈推荐)")
         print(f"   安装: pip install flash-attn --no-build-isolation")
 
+def check_huggingface_network():
+    """检查 HuggingFace 网络连接"""
+    print_section("HuggingFace 网络连接")
+    
+    import urllib.request
+    import socket
+    import os
+    
+    # 检测是否使用镜像
+    hf_endpoint = os.environ.get('HF_ENDPOINT', '')
+    if hf_endpoint:
+        print(f"   检测到镜像配置: {hf_endpoint}")
+    
+    # 测试连接的目标
+    test_urls = [
+        ("HuggingFace 官网", "https://huggingface.co"),
+        ("HuggingFace 模型库", "https://huggingface.co/api/models"),
+    ]
+    
+    if hf_endpoint:
+        test_urls.insert(0, ("HuggingFace 镜像", hf_endpoint))
+    
+    all_ok = True
+    for name, url in test_urls:
+        try:
+            req = urllib.request.Request(
+                url,
+                headers={'User-Agent': 'Mozilla/5.0'},
+                method='HEAD'
+            )
+            with urllib.request.urlopen(req, timeout=10) as response:
+                status = response.getcode()
+                if status == 200:
+                    print(f"✅ {name}: 连接正常")
+                else:
+                    print(f"⚠️  {name}: HTTP {status}")
+                    all_ok = False
+        except urllib.error.HTTPError as e:
+            # 某些端点可能返回 403/405，但只要能连接说明网络通
+            if e.code in [403, 405]:
+                print(f"✅ {name}: 连接正常 (HTTP {e.code})")
+            else:
+                print(f"❌ {name}: HTTP {e.code}")
+                all_ok = False
+        except urllib.error.URLError as e:
+            print(f"❌ {name}: 连接失败 ({e.reason})")
+            all_ok = False
+        except socket.timeout:
+            print(f"❌ {name}: 连接超时")
+            all_ok = False
+        except Exception as e:
+            print(f"❌ {name}: 连接异常 ({type(e).__name__})")
+            all_ok = False
+    
+    # 提供建议
+    if not all_ok:
+        print("\n   建议:")
+        print("   1. 检查网络连接和代理设置")
+        print("   2. 国内用户可使用镜像:")
+        print("      export HF_ENDPOINT=https://hf-mirror.com")
+        print("   3. 或使用 --mirror 参数运行 start_train.sh")
+    else:
+        print("\n   ✅ HuggingFace 网络连接正常，可以下载模型")
+    
+    return all_ok
+
 def test_model_loading():
     """测试模型加载能力"""
     print_section("模型加载测试")
@@ -296,6 +362,9 @@ def main():
     check_monitoring()
     check_dev_tools()
     check_flash_attention()
+    
+    # 网络连接检查
+    results['HF Network'] = check_huggingface_network()
     
     # 模型加载测试
     results['Model Loading'] = test_model_loading()
