@@ -3,6 +3,9 @@
 """
 Figma JSON 数据处理脚本
 用于准备训练数据
+
+使用方法:
+    python data_processor.py --input ./data/raw.jsonl --output ./data/train.json
 """
 
 import json
@@ -123,158 +126,30 @@ class FigmaJSONProcessor:
             print(f"  指令: {processed_data[0]['instruction'][:100]}...")
             print(f"  输出预览: {processed_data[0]['output'][:150]}...")
     
-    def create_sample_data(self, output_dir: str = "./data"):
-        """
-        创建示例数据（用于测试）
-        
-        Args:
-            output_dir: 输出目录
-        """
-        sample_data = [
-            {
-                "instruction": "创建一个蓝色的矩形按钮，宽度200px，高度50px，圆角8px",
-                "input": "",
-                "output": {
-                    "type": "RECTANGLE",
-                    "name": "Button",
-                    "width": 200,
-                    "height": 50,
-                    "x": 0,
-                    "y": 0,
-                    "fills": [
-                        {
-                            "type": "SOLID",
-                            "color": {"r": 0.0, "g": 0.5, "b": 1.0, "a": 1.0}
-                        }
-                    ],
-                    "cornerRadius": 8,
-                    "blendMode": "PASS_THROUGH"
-                }
-            },
-            {
-                "instruction": "生成一个红色圆形，直径60px",
-                "input": "",
-                "output": {
-                    "type": "ELLIPSE",
-                    "name": "Circle",
-                    "width": 60,
-                    "height": 60,
-                    "x": 0,
-                    "y": 0,
-                    "fills": [
-                        {
-                            "type": "SOLID",
-                            "color": {"r": 1.0, "g": 0.0, "b": 0.0, "a": 1.0}
-                        }
-                    ],
-                    "blendMode": "PASS_THROUGH"
-                }
-            },
-            {
-                "instruction": "创建一个文本框，内容为'Hello World'，字体大小24px，Inter Medium字体",
-                "input": "",
-                "output": {
-                    "type": "TEXT",
-                    "name": "Text",
-                    "width": 150,
-                    "height": 30,
-                    "x": 0,
-                    "y": 0,
-                    "characters": "Hello World",
-                    "fontSize": 24,
-                    "fontName": {
-                        "family": "Inter",
-                        "style": "Medium"
-                    },
-                    "fills": [
-                        {
-                            "type": "SOLID",
-                            "color": {"r": 0.0, "g": 0.0, "b": 0.0, "a": 1.0}
-                        }
-                    ],
-                    "textAlignHorizontal": "LEFT",
-                    "textAlignVertical": "TOP",
-                    "blendMode": "PASS_THROUGH"
-                }
-            }
-        ]
-        
-        os.makedirs(output_dir, exist_ok=True)
-        
-        # 创建训练集 (80%)
-        train_size = int(len(sample_data) * 0.8)
-        train_data = sample_data[:train_size] if train_size > 0 else sample_data[:1]
-        
-        # 创建验证集 (20%)
-        val_data = sample_data[train_size:] if train_size < len(sample_data) else [sample_data[0]]
-        
-        # 保存为 JSONL 格式
-        with open(f"{output_dir}/raw_train.jsonl", 'w', encoding='utf-8') as f:
-            for item in train_data:
-                f.write(json.dumps(item, ensure_ascii=False) + '\n')
-        
-        with open(f"{output_dir}/raw_val.jsonl", 'w', encoding='utf-8') as f:
-            for item in val_data:
-                f.write(json.dumps(item, ensure_ascii=False) + '\n')
-        
-        print(f"示例数据已创建在 {output_dir} 目录")
-        print(f"  训练集: {len(train_data)} 条")
-        print(f"  验证集: {len(val_data)} 条")
-
-
 def main():
     """主函数"""
     import argparse
     
     parser = argparse.ArgumentParser(description="Figma JSON 数据处理工具")
     parser.add_argument(
-        "--mode",
-        type=str,
-        choices=['sample', 'process'],
-        default='sample',
-        help="运行模式: sample(创建示例), process(处理数据)"
-    )
-    parser.add_argument(
         "--input",
         type=str,
+        required=True,
         help="输入文件路径（JSONL或JSON格式）"
     )
     parser.add_argument(
         "--output",
         type=str,
+        required=True,
         help="输出文件路径"
     )
     
     args = parser.parse_args()
-    
+
     processor = FigmaJSONProcessor()
-    data_dir = "./data"
     
-    if args.mode == 'sample':
-        # 创建示例数据
-        print("创建示例数据...")
-        processor.create_sample_data(data_dir)
-        
-        # 处理示例数据
-        print("\n处理训练数据...")
-        processor.process_dataset(
-            f"{data_dir}/raw_train.jsonl",
-            f"{data_dir}/train.json"
-        )
-        
-        print("\n处理验证数据...")
-        processor.process_dataset(
-            f"{data_dir}/raw_val.jsonl",
-            f"{data_dir}/val.json"
-        )
-        
-    elif args.mode == 'process':
-        if not args.input or not args.output:
-            print("错误: process 模式需要提供 --input 和 --output 参数")
-            return
-        
-        print(f"处理数据: {args.input} -> {args.output}")
-        processor.process_dataset(args.input, args.output)
+    print(f"处理数据: {args.input} -> {args.output}")
+    processor.process_dataset(args.input, args.output)
     
     print("\n数据处理完成!")
 

@@ -41,23 +41,6 @@ then
     fi
 fi
 
-# 询问是否生成示例数据
-echo ""
-read -p "是否生成示例数据？(y/n) " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]
-then
-    echo ""
-    echo "生成示例数据..."
-    python3 data_processor.py
-    
-    if [ $? -eq 0 ]; then
-        echo "✓ 示例数据生成完成"
-    else
-        echo "✗ 示例数据生成失败"
-    fi
-fi
-
 echo ""
 echo "==================================="
 echo "设置完成！"
