@@ -78,3 +78,6 @@ runs/
 .huggingface/ 
 unsloth_compiled_cache/
 models/*
+
+# llama.cpp (Unsloth 自动下载的工具)
+llama.cpp/
