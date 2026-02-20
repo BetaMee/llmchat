@@ -1,5 +1,5 @@
 data:
-  max_length: 2048
+  max_length: 1024
   train_file: ./data/train.json
   val_file: ./data/val.json
 inference:
@@ -25,10 +25,11 @@ lora:
   use_gradient_checkpointing: unsloth
   use_rslora: false
 model:
-  dtype: bfloat16
-  load_in_4bit: true
-  max_seq_length: 2048
-  name: unsloth/Qwen2.5-3B-Instruct
+  dtype: null
+  load_in_8bit: true
+  load_in_4bit: false
+  max_seq_length: 1024
+  name: unsloth/Qwen2.5-7B-Instruct
 training:
   bf16: true
   fp16: false

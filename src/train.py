@@ -6,12 +6,8 @@ Unsloth + Qwen 微调训练脚本
 """
 
 import os
-import json
-import yaml
 import torch
-
-# 禁用 Unsloth 的 fused cross entropy 以节省显存（可选）
-# os.environ["UNSLOTH_DISABLE_FUSED_CROSS_ENTROPY"] = "1"
+import yaml
 
 # ⚠️ 重要：Unsloth 必须在 transformers, trl, peft 之前导入以启用所有优化
 from unsloth import FastLanguageModel
@@ -20,7 +16,6 @@ from unsloth import FastLanguageModel
 from datasets import load_dataset
 from transformers import TrainingArguments
 from trl import SFTTrainer
-
 
 class FigmaJSONTrainer:
     """Figma JSON 微调训练器"""
@@ -40,6 +35,45 @@ class FigmaJSONTrainer:
         self.train_dataset = None
         self.eval_dataset = None
     
+    def check_unsloth_config(self):
+        """检查 Unsloth 的配置状态"""
+        print("\n" + "="*60)
+        print("   Unsloth 2026.2.1 配置检查")
+        print("="*60)
+        
+        # 检查环境变量
+        print(f"\n环境变量:")
+        print(f"  UNSLOTH_ENABLE_CCE: {os.environ.get('UNSLOTH_ENABLE_CCE', '未设置')}")
+        print(f"  UNSLOTH_DISABLE_FUSED_LOSS: {os.environ.get('UNSLOTH_DISABLE_FUSED_LOSS', '未设置')}")
+        print(f"  PYTORCH_CUDA_ALLOC_CONF: {os.environ.get('PYTORCH_CUDA_ALLOC_CONF', '未设置')}")
+        
+        # 检查设备类型
+        try:
+            from unsloth_zoo.device_type import DEVICE_TYPE
+            print(f"\n设备信息:")
+            print(f"  设备类型: {DEVICE_TYPE}")
+        except ImportError:
+            print(f"\n设备信息: 无法获取 DEVICE_TYPE")
+        
+        # 检查显存
+        if torch.cuda.is_available():
+            print(f"\n显存状态:")
+            print(f"  GPU 已分配: {torch.cuda.memory_allocated()/1024**3:.2f} GB")
+            print(f"  GPU 已预留: {torch.cuda.memory_reserved()/1024**3:.2f} GB")
+            print(f"  GPU 总显存: {torch.cuda.get_device_properties(0).total_memory/1024**3:.2f} GB")
+        
+        # 检查模型配置
+        if self.model is not None:
+            print(f"\n模型信息:")
+            print(f"  模型类型: {type(self.model).__name__}")
+            if hasattr(self.model, 'config'):
+                config_attrs = ['disable_fused_loss', 'use_cache']
+                for attr in config_attrs:
+                    if hasattr(self.model.config, attr):
+                        print(f"  {attr}: {getattr(self.model.config, attr)}")
+        
+        print("="*60 + "\n")
+    
     def load_model(self):
         """加载模型和分词器"""
         print("正在加载模型...")
@@ -52,8 +86,11 @@ class FigmaJSONTrainer:
             max_seq_length=model_config['max_seq_length'],
             dtype=model_config['dtype'],
             load_in_4bit=model_config['load_in_4bit'],
+            load_in_8bit=model_config['load_in_8bit'],
+            # device_map = "auto", 
+            # max_memory = {0: "10GiB", "cpu": "20GiB"},  # 限制GPU使用10GB，其余放CPU
         )
-        
+
         # 配置 LoRA
         self.model = FastLanguageModel.get_peft_model(
             self.model,
@@ -72,7 +109,10 @@ class FigmaJSONTrainer:
         print(f"  模型: {model_config['name']}")
         print(f"  LoRA rank: {lora_config['r']}")
         print(f"  最大序列长度: {model_config['max_seq_length']}")
-        print(f"  4-bit 量化: {model_config['load_in_4bit']}")
+        print(f"  8-bit 量化: {model_config['load_in_8bit']}")
+
+        # 检查 Unsloth 配置状态
+        self.check_unsloth_config()
     
     def load_datasets(self):
         """加载数据集"""
@@ -160,34 +200,56 @@ class FigmaJSONTrainer:
         print("\n训练完成!")
         
         # 保存模型
-        output_dir = self.config['training']['output_dir']
-        final_model_path = f"{output_dir}/final_model"
+        self.save_models(trainer)
         
-        print(f"\n保存最终模型到: {final_model_path}")
-        trainer.save_model(final_model_path)
-        
-        # 保存为 GGUF 格式（可选，Windows 上可能无法使用）
-        # print("\n保存为 GGUF 格式...")
-        # try:
-        #     self.model.save_pretrained_gguf(
-        #         f"{output_dir}/gguf_model",
-        #         self.tokenizer,
-        #         quantization_method="q4_k_m"
-        #     )
-        #     print("GGUF 模型保存成功!")
-        # except Exception as e:
-        #     print(f"GGUF 保存失败（这是可选的）: {e}")
-        
-        # 保存为合并后的 16bit 模型
-        print("\n保存合并后的 16bit 模型...")
-        self.model.save_pretrained_merged(
-            f"{output_dir}/merged_16bit",
-            self.tokenizer,
-            save_method="merged_16bit"
-        )
-        
-        print(f"\n所有模型已保存到: {output_dir}")
         return trainer
+    
+    def save_models(self, trainer, save_gguf: bool = False):
+        """
+        保存训练后的模型
+        
+        Args:
+            trainer: 训练器对象
+            save_gguf: 是否保存 GGUF 格式（Windows 上可能无法使用）
+        """
+        output_dir = self.config['training']['output_dir']
+        
+        # 1. 保存 LoRA 适配器
+        final_model_path = f"{output_dir}/final_model"
+        print(f"\n保存 LoRA 适配器到: {final_model_path}")
+        trainer.save_model(final_model_path)
+        print("✅ LoRA 适配器保存成功!")
+        
+        # 2. 保存合并后的 16-bit 完整模型
+        merged_16bit_path = f"{output_dir}/merged_16bit"
+        print(f"\n保存合并后的 16-bit 模型到: {merged_16bit_path}")
+        try:
+            self.model.save_pretrained_merged(
+                merged_16bit_path,
+                self.tokenizer,
+                save_method="merged_16bit"
+            )
+            print("✅ 16-bit 合并模型保存成功!")
+        except Exception as e:
+            print(f"⚠️  16-bit 合并模型保存失败: {e}")
+        
+        # 3. 保存为 GGUF 格式（可选）
+        if save_gguf:
+            gguf_path = f"{output_dir}/gguf_model"
+            print(f"\n保存为 GGUF 格式到: {gguf_path}")
+            try:
+                self.model.save_pretrained_gguf(
+                    gguf_path,
+                    self.tokenizer,
+                    quantization_method="q4_k_m"
+                )
+                print("✅ GGUF 模型保存成功!")
+            except Exception as e:
+                print(f"⚠️  GGUF 保存失败（这是可选的）: {e}")
+        
+        print(f"\n{'='*60}")
+        print(f"   所有模型已保存到: {output_dir}")
+        print(f"{'='*60}")
     
     def get_training_stats(self, trainer):
         """获取训练统计信息"""
