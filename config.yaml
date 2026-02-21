@@ -26,8 +26,8 @@ lora:
   use_rslora: false
 model:
   dtype: null
-  load_in_8bit: false
-  load_in_4bit: true
+  load_in_8bit: true
+  load_in_4bit: false
   max_seq_length: 2048
   name: unsloth/Qwen3-4B
 training:
@@ -41,7 +41,7 @@ training:
   optim: adamw_8bit
   output_dir: ./outputs
   per_device_train_batch_size: 1
-  report_to: tensorboard
+  report_to: none
   save_steps: 100
   save_strategy: steps
   save_total_limit: 3
