@@ -1,6 +1,13 @@
 #!/bin/bash
 # vLLM 服务启动脚本
 
+# 禁用 Triton C 编译（避免需要系统 C 编译器）
+export TRITON_BUILD_IMPL=pytorch
+export VLLM_TORCH_COMPILE=0
+
+# 可选：设置 API Key 启用鉴权
+# export API_KEY="your-secret-key"
+
 echo "=========================================="
 echo "  Figma JSON vLLM 服务"
 echo "=========================================="
