@@ -13,6 +13,7 @@ torchvision==0.25.0
 
 # 注意：需要先安装指定 CUDA 版本的 PyTorch，再安装 Unsloth
 # Unsloth - 高速微调加速库 (2-5x 提速)
+# pip install unsloth
 unsloth==0.1.0
 
 # Transformers - Hugging Face 模型库 (支持 Qwen3-VL)
