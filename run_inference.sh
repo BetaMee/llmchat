@@ -5,11 +5,6 @@ echo "=========================================="
 echo "  Figma JSON 模型推理"
 echo "=========================================="
 
-# 🔥 重要：禁用 HuggingFace 在线检查（使用本地模型）
-export HF_HUB_OFFLINE=1
-export TRANSFORMERS_OFFLINE=1
-echo "✅ 离线模式已启用"
-
 echo ""
 echo "开始推理..."
 echo ""

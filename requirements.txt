@@ -77,3 +77,16 @@ jupyter>=1.0.0
 # Triton - GPU 编程语言 (Unsloth 可能需要)
 # pip install triton>=2.0.0
 
+# -------------------- vLLM 服务部署 --------------------
+# 建议单开一个 conda python 环境安装 vLLM
+
+# vLLM - 高性能推理引擎
+# pip install vllm
+vllm>=0.15.1
+
+# FastAPI - Web 框架
+# pip install fastapi uvicorn
+fastapi>=0.131.0
+uvicorn>=0.41.0
+
+
