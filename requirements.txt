@@ -16,7 +16,7 @@ torchvision==0.25.0
 # pip install unsloth
 unsloth==0.1.0
 
-# Transformers - Hugging Face 模型库 (支持 Qwen3-VL)
+# Transformers - Hugging Face 模型库 (支持当前 Qwen 模型)
 transformers>=4.40.0
 
 # Datasets - 数据集加载和处理
@@ -88,5 +88,4 @@ vllm>=0.15.1
 # pip install fastapi uvicorn
 fastapi>=0.131.0
 uvicorn>=0.41.0
-
 

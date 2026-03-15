@@ -81,7 +81,7 @@ def check_transformers():
         if major > 4 or (major == 4 and minor >= 40):
             print(f"   状态: 符合要求 (>= 4.40.0)")
         else:
-            print(f"   ⚠️  警告: 需要 >= 4.40.0 以支持 Qwen3-VL")
+            print(f"   ⚠️  警告: 需要 >= 4.40.0 以支持当前 Qwen 模型")
         
         return True
     except ImportError as e:
@@ -333,8 +333,8 @@ def print_summary(results):
     if failed == 0:
         print("\n🎉 所有核心依赖已正确安装！")
         print("\n下一步:")
-        print("  1. 准备训练数据: python data_processor.py --mode sample")
-        print("  2. 开始训练: python train.py")
+        print("  1. 准备训练数据: python src/data_processor.py --input ./data/figma-records.jsonl --output ./data/train.json")
+        print("  2. 开始训练: python src/train.py")
     else:
         print("\n⚠️  部分依赖缺失或配置异常，请根据上述提示修复。")
         print("\n常见问题:")
